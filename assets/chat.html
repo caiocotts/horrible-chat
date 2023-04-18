@@ -47,8 +47,38 @@
 
 <div class="input-wrapper">
     <span>&nbsp;&gt;&nbsp;</span>
-    <input type="text" placeholder="message"/>
+    <input type="text" id="message-box" placeholder="message" value=""/>
 </div>
+
+<script>
+    const messageBox = document.getElementById('message-box')
+
+    messageBox.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+
+            fetch("/send", {
+                method: "POST",
+                body: JSON.stringify({
+                    chatId: window.location.pathname.replaceAll('/chat/', ''),
+                    message: messageBox.value
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to send message.");
+                    }
+                    messageBox.value = ''
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+    });
+</script>
 
 </body>
 </html>
