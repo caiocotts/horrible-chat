@@ -1,0 +1,54 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Horrible Chat</title>
+    <style>
+        body {
+            font-family: "3270 Nerd Font";
+            background: black;
+            color: white;
+        }
+
+        .input-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            border-top: 1px solid white;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .input-wrapper input[type="text"] {
+            font-family: "3270 Nerd Font";
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            width: 100%;
+            margin-right: 10px;
+            padding: 0;
+            caret-color: white;
+            outline: none;
+        }
+
+        .input-wrapper input[type="text"]::placeholder {
+            color: gray;
+        }
+    </style>
+
+</head>
+<body>
+<h1 style="color: red; text-align: center">[Horrible Chat]</h1>
+
+<div class="input-wrapper">
+    <span>&nbsp;&gt;&nbsp;</span>
+    <input type="text" placeholder="message"/>
+</div>
+
+</body>
+</html>
