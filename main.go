@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -14,8 +15,15 @@ import (
 )
 
 func main() {
+	type message struct {
+		ChatId  string `json:"chatId"`
+		UserId  string `json:"userId"`
+		Message string `json:"message"`
+	}
+
+	c := make(chan message, 1000)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("New connection")
 		w.Write(Asset("index.html"))
 	})
 
@@ -29,7 +37,12 @@ func main() {
 	})
 
 	http.HandleFunc("/chat/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(Asset("chat.html"))
+		Asset("chat.html")
+		t, _ := template.New("").Parse(string(Asset("chat.html")))
+		uid, _ := gonanoid.New()
+		t.Execute(w, struct {
+			UserId string
+		}{UserId: uid})
 		_, id := path.Split(r.URL.Path)
 		log.Printf("Your session is %s\n", id)
 	})
@@ -37,10 +50,7 @@ func main() {
 	http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 
-			var m struct {
-				ChatId  string `json:"chatId"`
-				Message string `json:"message"`
-			}
+			var m message
 
 			dec := json.NewDecoder(r.Body)
 			dec.DisallowUnknownFields()
@@ -88,7 +98,35 @@ func main() {
 				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
-			log.Println("Message json", m)
+			c <- m
+		}
+
+	})
+
+	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+		var f http.Flusher
+		var ok bool
+		if f, ok = w.(http.Flusher); !ok {
+			fmt.Fprintf(w, "Streaming unsupported!")
+			return
+		}
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+
+		for {
+			select {
+			case m := <-c:
+				fmt.Fprintf(w, "data: {\"chatId\":\"%s\",\"userId\":\"%s\",\"message\":\"%s\"}\n\n", m.ChatId, m.UserId, m.Message)
+				log.Println(m)
+				f.Flush()
+			case <-r.Context().Done():
+				log.Println("Disconnected")
+				return
+			}
 		}
 	})
 

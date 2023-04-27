@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Horrible Chat</title>
+    <title>HChat</title>
     <style>
         body {
             font-family: "3270 Nerd Font";
@@ -39,11 +39,27 @@
         .input-wrapper input[type="text"]::placeholder {
             color: gray;
         }
+
+        .messages-container {
+            margin: 20px 0;
+            padding: 0 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 140px);
+        }
+
+        .username {
+            /*color: blue;*/
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
     </style>
 
 </head>
 <body>
 <h1 style="color: red; text-align: center">[Horrible Chat]</h1>
+
+<div class="messages-container"></div>
 
 <div class="input-wrapper">
     <span>&nbsp;&gt;&nbsp;</span>
@@ -51,25 +67,46 @@
 </div>
 
 <script>
+    const userId = '{{.UserId}}'
+    const userColor = '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
+    const client = new EventSource('/events')
     const messageBox = document.getElementById('message-box')
+    const messagesContainer = document.querySelector('.messages-container')
 
-    messageBox.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
+    client.onmessage = function (msg) {
+        let msgJson = JSON.parse(msg.data)
+        const usernameElement = document.createElement('span');
+        usernameElement.textContent = '[' + userId + ']';
+        usernameElement.className = 'username';
+        usernameElement.style.color = userColor;
+        const messageElement = document.createElement('div');
+        messageElement.appendChild(usernameElement);
+        messageElement.appendChild(document.createTextNode(': ' + msgJson['message']));
+        messagesContainer.appendChild(messageElement);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        console.log(msg)
+    }
+
+
+    messageBox.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
             event.preventDefault();
 
-            fetch("/send", {
-                method: "POST",
+            fetch('/send', {
+                method: 'POST',
                 body: JSON.stringify({
                     chatId: window.location.pathname.replaceAll('/chat/', ''),
+                    userId: userId,
                     message: messageBox.value
                 }),
                 headers: {
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json'
                 }
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Failed to send message.");
+                        throw new Error('Failed to send message.');
                     }
                     messageBox.value = ''
                 })
