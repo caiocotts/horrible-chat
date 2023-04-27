@@ -68,7 +68,11 @@
 
 <script>
     const userId = '{{.UserId}}'
-    const userColor = '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
+    const userColor = '#' + (
+        ((1 << 24) * Math.random() | 0)
+        & 0xF0F0FF
+    ).toString(16).padStart(6, '0')
+
     const client = new EventSource('/events')
     const messageBox = document.getElementById('message-box')
     const messagesContainer = document.querySelector('.messages-container')
