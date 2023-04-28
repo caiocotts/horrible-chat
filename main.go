@@ -15,13 +15,8 @@ import (
 )
 
 func main() {
-	type message struct {
-		ChatId  string `json:"chatId"`
-		UserId  string `json:"userId"`
-		Message string `json:"message"`
-	}
 
-	c := make(chan message, 1000)
+	broker := newBroker()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(Asset("index.html"))
@@ -98,37 +93,10 @@ func main() {
 				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
-			c <- m
-		}
-
-	})
-
-	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
-		var f http.Flusher
-		var ok bool
-		if f, ok = w.(http.Flusher); !ok {
-			fmt.Fprintf(w, "Streaming unsupported!")
-			return
-		}
-
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
-
-		for {
-			select {
-			case m := <-c:
-				fmt.Fprintf(w, "data: {\"chatId\":\"%s\",\"userId\":\"%s\",\"message\":\"%s\"}\n\n", m.ChatId, m.UserId, m.Message)
-				log.Println(m)
-				f.Flush()
-			case <-r.Context().Done():
-				log.Println("Disconnected")
-				return
-			}
+			log.Printf("Recieved message \"%s\" from user %s", m.Message, m.UserId)
+			broker.incoming <- m
 		}
 	})
-
+	http.Handle("/events", broker)
 	log.Fatal(http.ListenAndServe("127.0.0.1:4533", nil))
 }
