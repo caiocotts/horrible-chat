@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 )
@@ -19,7 +20,7 @@ func main() {
 	broker := newBroker()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(Asset("index.html"))
+		_, _ = w.Write(Asset("index.html"))
 	})
 
 	http.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +36,10 @@ func main() {
 		Asset("chat.html")
 		t, _ := template.New("").Parse(string(Asset("chat.html")))
 		uid, _ := gonanoid.New()
-		t.Execute(w, struct {
+		_ = t.Execute(w, struct {
 			UserId string
 		}{UserId: uid})
+
 		_, id := path.Split(r.URL.Path)
 		log.Printf("Your session is %s\n", id)
 	})
@@ -61,7 +63,7 @@ func main() {
 					http.Error(w, msg, http.StatusBadRequest)
 
 				case errors.Is(err, io.ErrUnexpectedEOF):
-					msg := fmt.Sprintf("Request body contains badly-formed JSON")
+					msg := "Request body contains badly-formed JSON"
 					http.Error(w, msg, http.StatusBadRequest)
 
 				case errors.As(err, &unmarshalTypeError):
@@ -98,5 +100,9 @@ func main() {
 		}
 	})
 	http.Handle("/events", broker)
-	log.Fatal(http.ListenAndServe("127.0.0.1:4533", nil))
+	address := os.Getenv("ADDRESS")
+	if address == "" {
+		address = "localhost:8080"
+	}
+	log.Fatal(http.ListenAndServe(address, nil))
 }
