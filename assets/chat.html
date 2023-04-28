@@ -69,32 +69,30 @@
 <script>
     class SeededRandom {
         constructor(seed) {
-            this.seed = this._stringToNumber(seed);
+            this.seed = this._stringToNumber(seed)
         }
 
         _stringToNumber(str) {
-            let hash = 0;
+            let hash = 0
             for (let i = 0; i < str.length; i++) {
-                hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+                hash = Math.imul(31, hash) + str.charCodeAt(i) | 0
             }
-            return hash;
+            return hash
         }
 
         next() {
-            const x = Math.sin(this.seed++) * 10000;
-            return x - Math.floor(x);
+            const x = Math.sin(this.seed++) * 10000
+            return x - Math.floor(x)
         }
     }
 
     function randomColorFromSeed(seed) {
-        const seededRandom = new SeededRandom(seed);
+        const seededRandom = new SeededRandom(seed)
 
-        // Generate hue, saturation, and lightness values
-        const hue = Math.floor(seededRandom.next() * 360);
-        const saturation = Math.floor(seededRandom.next() * 100);
-        const lightness = Math.floor(seededRandom.next() * (80 - 40) + 40); // Ensure lightness between 40% and 80%
-
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        const hue = Math.floor(seededRandom.next() * 360)
+        const saturation = Math.floor(seededRandom.next() * 100)
+        const lightness = Math.floor(seededRandom.next() * (80 - 40) + 40)
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`
     }
 
     const userId = '{{.UserId}}'
@@ -133,16 +131,14 @@
                 headers: {
                     'Content-Type': 'application/json'
                 }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message.')
+                }
+                messageBox.value = ''
+            }).catch(error => {
+                console.error(error)
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to send message.')
-                    }
-                    messageBox.value = ''
-                })
-                .catch(error => {
-                    console.error(error)
-                })
         }
     })
 </script>
