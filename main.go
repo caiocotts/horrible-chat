@@ -95,6 +95,9 @@ func main() {
 				http.Error(w, msg, http.StatusBadRequest)
 				return
 			}
+			if strings.TrimSpace(m.Message) == "" {
+				return
+			}
 			log.Printf("Recieved message \"%s\" from user %s", m.Message, m.UserId)
 			broker.incoming <- m
 		}
