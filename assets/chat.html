@@ -57,8 +57,7 @@
 
 </head>
 <body>
-<h1 style="color: red; text-align: center">[Horrible Chat]</h1>
-
+<h1 style="text-align: center"><a style="color: red; text-decoration: none" href="/">[Horrible Chat]</a></h1>
 <div class="messages-container"></div>
 
 <div class="input-wrapper">
@@ -96,7 +95,7 @@
     }
 
     const userId = '{{.UserId}}'
-    const chatId = window.location.pathname.replaceAll('/chat/', '')
+    const chatId = window.location.pathname.replaceAll('/c/', '')
     const client = new EventSource('/events?chatId=' + chatId + '&userId=' + userId)
     const messageBox = document.getElementById('message-box')
     const messagesContainer = document.querySelector('.messages-container')
@@ -120,7 +119,7 @@
     messageBox.addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
             event.preventDefault()
-            if (messageBox.value.trim() === ""){
+            if (messageBox.value.trim() === "") {
                 return
             }
             fetch('/send', {

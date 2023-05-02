@@ -22,6 +22,8 @@ type broker struct {
 	incoming           chan message
 	newConnections     chan connection
 	closingConnections chan connection
+	newChats           chan string
+	chats              map[string]int
 	connections        map[string]connection
 }
 
@@ -30,6 +32,8 @@ func newBroker() *broker {
 		incoming:           make(chan message),
 		newConnections:     make(chan connection),
 		closingConnections: make(chan connection),
+		newChats:           make(chan string),
+		chats:              make(map[string]int),
 		connections:        make(map[string]connection),
 	}
 	go b.listen()
@@ -39,11 +43,29 @@ func (b *broker) listen() {
 	for {
 		select {
 		case c := <-b.newConnections:
+			if _, ok := b.chats[c.chatId]; !ok {
+				continue
+			}
 			b.connections[c.userId] = c
+			b.chats[c.chatId] += 1
 			log.Printf("user %s has connected\n", c.userId)
+
 		case c := <-b.closingConnections:
+			if _, ok := b.chats[c.chatId]; !ok {
+				continue
+			}
 			delete(b.connections, c.userId)
-			log.Printf("user %s has disconnected\n", c.userId)
+			b.chats[c.chatId] -= 1
+			if b.chats[c.chatId] == 0 {
+				delete(b.chats, c.chatId)
+			}
+			log.Printf("user %s has disconnected from chat: %s\n", c.userId, c.chatId)
+
+		case cid := <-b.newChats:
+			log.Println("chat", cid, "has been created")
+			b.chats[cid] = 0
+			log.Println(b.chats)
+
 		case m := <-b.incoming:
 			log.Printf("User %s has sent this message \"%s\"", m.UserId, m.Message)
 			for c := range b.connections {
@@ -86,7 +108,6 @@ func (b *broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(m)
 			f.Flush()
 		case <-r.Context().Done():
-			log.Println()
 			return
 		}
 	}

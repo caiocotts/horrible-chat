@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-
 	broker := newBroker()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -29,21 +28,25 @@ func main() {
 			log.Println(err)
 			return
 		}
-		http.Redirect(w, r, "/chat/"+id, http.StatusFound)
+		broker.newChats <- id
+		http.Redirect(w, r, "/c/"+id, http.StatusFound)
 	})
 
-	http.HandleFunc("/chat/", func(w http.ResponseWriter, r *http.Request) {
-		Asset("chat.html")
+	http.HandleFunc("/c/", func(w http.ResponseWriter, r *http.Request) {
+		_, id := path.Split(r.URL.Path)
+		if _, ok := broker.chats[id]; !ok {
+			//http.Error(w, "this chat does not exist", http.StatusNotFound)
+			_, _ = w.Write(Asset("notfound.html"))
+			return
+		}
 		t, _ := template.New("").Parse(string(Asset("chat.html")))
 		uid, _ := gonanoid.New()
 		_ = t.Execute(w, struct {
 			UserId string
 		}{UserId: uid})
 
-		_, id := path.Split(r.URL.Path)
 		log.Printf("Your session is %s\n", id)
 	})
-
 	http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 
@@ -107,5 +110,6 @@ func main() {
 	if address == "" {
 		address = "localhost:8080"
 	}
+	log.Println("Horrible Chat has started on:", address)
 	log.Fatal(http.ListenAndServe(address, nil))
 }
