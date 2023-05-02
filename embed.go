@@ -6,12 +6,16 @@ import (
 )
 
 //go:embed assets
-var fsys embed.FS
+var Fsys embed.FS
 
 func Asset(path string) []byte {
-	data, err := fsys.ReadFile("assets/" + path)
+	data, err := Fsys.ReadFile("assets/" + path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return data
+}
+
+func Font() []byte {
+	return Asset("font/3270.ttf")
 }

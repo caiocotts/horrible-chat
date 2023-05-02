@@ -47,6 +47,7 @@ func main() {
 
 		log.Printf("Your session is %s\n", id)
 	})
+
 	http.HandleFunc("/send", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 
@@ -105,6 +106,14 @@ func main() {
 			broker.incoming <- m
 		}
 	})
+
+	http.HandleFunc("/font/3270.ttf", func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write(Font())
+		if err != nil {
+			log.Println(err)
+		}
+	})
+
 	http.Handle("/events", broker)
 	address := os.Getenv("ADDRESS")
 	if address == "" {
