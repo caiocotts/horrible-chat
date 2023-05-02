@@ -1,0 +1,53 @@
+@font-face {
+    font-family: "3270";
+    src: url("/assets/font/3270.ttf");
+}
+body {
+    font-family: "3270";
+    background: black;
+    color: white;
+}
+
+.input-wrapper {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    border-top: 1px solid white;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.input-wrapper input[type="text"] {
+    font-family: "3270";
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    width: 100%;
+    margin-right: 10px;
+    padding: 0;
+    caret-color: white;
+    outline: none;
+}
+
+.input-wrapper input[type="text"]::placeholder {
+    color: gray;
+}
+
+.messages-container {
+    margin: 20px 0;
+    padding: 0 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 140px);
+}
+
+.username {
+    /*color: blue;*/
+    font-weight: bold;
+    margin-right: 5px;
+}
