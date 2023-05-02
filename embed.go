@@ -6,10 +6,13 @@ import (
 )
 
 //go:embed assets
-var Fsys embed.FS
+var Assets embed.FS
+
+//go:embed templates
+var Templates embed.FS
 
 func init() {
-	file, err := Fsys.Open("assets/font/3270.ttf")
+	file, err := Assets.Open("assets/font/3270.ttf")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -17,13 +20,17 @@ func init() {
 }
 
 func Asset(path string) []byte {
-	data, err := Fsys.ReadFile("assets/" + path)
+	data, err := Assets.ReadFile("assets/" + path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return data
 }
 
-func Font() []byte {
-	return Asset("font/3270.ttf")
+func Template(path string) []byte {
+	data, err := Templates.ReadFile("templates/" + path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return data
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/matoous/go-nanoid/v2"
 	"html/template"
 	"io"
@@ -18,6 +19,7 @@ import (
 
 func main() {
 	r := chi.NewRouter()
+	r.Use(middleware.Compress(9, "text/html", "font/ttf"))
 	broker := newBroker()
 
 	r.Get("/new", func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +38,7 @@ func main() {
 			_, _ = w.Write(Asset("notfound.html"))
 			return
 		}
-		t, _ := template.New("").Parse(string(Asset("chat.html")))
+		t, _ := template.New("").Parse(string(Template("chat.html")))
 		uid, _ := gonanoid.New()
 		_ = t.Execute(w, struct {
 			UserId string
@@ -102,18 +104,13 @@ func main() {
 		broker.incoming <- m
 	})
 
-	r.Get("/font/3270.ttf", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write(Font())
-		if err != nil {
-			log.Println(err)
-		}
-	})
-
 	r.Handle("/events", broker)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(Asset("index.html"))
 	})
+
+	r.With(middleware.SetHeader("cache-control", "public, max-age=31536000, s-maxage=31536000, immutable")).Handle("/*", http.FileServer(http.FS(Assets)))
 
 	address := os.Getenv("ADDRESS")
 	if address == "" {
